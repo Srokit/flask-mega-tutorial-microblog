@@ -15,6 +15,9 @@
     <form action="" method="post" name="login">
         {{form.hidden_tag()}}
         <p>
+            {% if error %}
+            <span style="color: red;"><strong>Error:</strong>{{error}}</span>
+            {% endif %}
             Please enter you OpenID, or select one of the providers below:<br>
             {{form.openid(size=80)}}<br>
             {% for error in form.openid.errors %}
@@ -27,5 +30,6 @@
         </p>
         <p>{{form.remember_me}} Remember Me</p>
         <p><input type="submit" value="Sign In"></p>
+        <input type="hidden" name="next" value="{{ next }}">
     </form>
 {% endblock %}
