@@ -1,11 +1,16 @@
 from app import db
-
+import hashlib
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nickname = db.Column(db.String(64), index=True, unique=True)
     email = db.Column(db.String(120), index=True, unique=True)
     posts = db.relationship('Post', backref='author', lazy='dynamic')
+
+    # So we can eaily make gravatars from the email of user
+    def avatar(self, size):
+        return 'http://www.gravatar.com/avatar/%s?d=mm&s=%d' % \
+               (hashlib.md5(self.email.encode('utf-8')).hexdigest(), size)
 
     @property
     def is_authenticated(self):
