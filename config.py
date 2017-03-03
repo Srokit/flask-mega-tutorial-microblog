@@ -20,3 +20,6 @@ MAIL_USERNAME = None
 MAIL_PASSWORD = None
 
 ADMINS = ['you@example.com']
+
+# For pagiation of posts in /index
+POSTS_PER_PAGE = 3

@@ -3,17 +3,19 @@ from flask_login import login_user, logout_user, current_user, login_required
 from app import app, db, lm, oid
 from .forms import LoginForm, EditForm, PostForm
 from .models import User, Post
+from config import POSTS_PER_PAGE
 
 import datetime
 
 
 @app.route('/')
 @app.route('/index')
+@app.route('/index/<int:page>')
 @login_required
-def index():
+def index(page=1):
     # Placeholder user
     user = g.user
-    posts = user.followed_posts().all()
+    posts = user.followed_posts().paginate(page, POSTS_PER_PAGE, False)
     return render_template('index.html',
                            title='Home',
                            user=user,
@@ -75,15 +77,15 @@ def after_login(resp):
 
 
 @app.route('/user/<nickname>')
+@app.route('/user/<nickname>/<int:page>')
 @login_required
-def user(nickname):
+def user(nickname, page=1):
 
     user = User.query.filter_by(nickname=nickname).first()
     if user is None:
         flash('User %s not found.' % nickname)
         return redirect(url_for('index'))
-    posts = Post.query.filter_by(author=user).order_by(Post.timestamp.desc())\
-        .all()
+    posts = user.posts.paginate(page, POSTS_PER_PAGE, False)
     post_form = PostForm()
     return render_template('user.html',
                            user=user,
