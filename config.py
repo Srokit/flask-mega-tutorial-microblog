@@ -23,3 +23,7 @@ ADMINS = ['you@example.com']
 
 # For pagiation of posts in /index
 POSTS_PER_PAGE = 3
+
+WHOOSH_BASE = os.path.join(basedir, 'search.db')
+
+MAX_SEARCH_RESULTS = 50

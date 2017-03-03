@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block content %}
+    <h3>Showing results for "{{ query }}"</h3>
+    {% for post in results %}
+        {% include "post.html" %}
+    {% endfor %}
+{% endblock %}
