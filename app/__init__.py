@@ -5,7 +5,7 @@ from config import basedir
 from config import ADMINS, MAIL_SERVER, MAIL_PORT, MAIL_USERNAME, MAIL_PASSWORD
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-
+from flask_mail import Mail
 
 app = Flask(__name__)
 app.config.from_object('config')
@@ -39,5 +39,7 @@ if not app.debug:
     app.logger.addHandler(file_handler)
     app.logger.info('microblog startup')
 
+# Our main mail handling object
+mail = Mail(app)
 
 from app import views, models
