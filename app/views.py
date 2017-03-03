@@ -1,10 +1,11 @@
 from flask import render_template, flash, redirect, session, url_for, request, g
 from flask_login import login_user, logout_user, current_user, login_required
 from app import app, db, lm, oid
-from .forms import LoginForm, EditForm
+from .forms import LoginForm, EditForm, PostForm
 from .models import User, Post
 
 import datetime
+
 
 @app.route('/')
 @app.route('/index')
@@ -12,11 +13,7 @@ import datetime
 def index():
     # Placeholder user
     user = g.user
-    posts = [
-        Post(author=user, body='Post by me', timestamp=datetime.datetime.now()),
-        Post(author=User(nickname='Stan2', email='srok35@gmail.com'),
-             body='Post #1', timestamp=datetime.datetime.now())
-    ]
+    posts = user.followed_posts().all()
     return render_template('index.html',
                            title='Home',
                            user=user,
@@ -43,6 +40,7 @@ def login():
                            next=oid.get_next_url(),
                            error=oid.fetch_error())
 
+
 @app.route('/logout')
 def logout():
     logout_user()
@@ -61,8 +59,13 @@ def after_login(resp):
             nickname = resp.email.split('@')[0]
         nickname = User.make_unique_nickname(nickname)
         user = User(nickname=nickname, email=resp.email)
+        # The user needs to follow himself to see his own posts
         db.session.add(user)
         db.session.commit()
+        u = user.follow(user)
+        db.session.add(u)
+        db.session.commit()
+
     remember_me = False
     if 'remember_me' in session:
         remember_me = session['remember_me']
@@ -74,17 +77,59 @@ def after_login(resp):
 @app.route('/user/<nickname>')
 @login_required
 def user(nickname):
+
     user = User.query.filter_by(nickname=nickname).first()
     if user is None:
         flash('User %s not found.' % nickname)
         return redirect(url_for('index'))
-    posts = [
-        {'author': user, 'body': 'Test post #1'},
-        {'author': user, 'body': 'Test post # 2'}
-    ]
+    posts = Post.query.filter_by(author=user).order_by(Post.timestamp.desc())\
+        .all()
+    post_form = PostForm()
     return render_template('user.html',
                            user=user,
+                           post_form=post_form,
                            posts=posts)
+
+
+@app.route('/follow/<nickname>')
+@login_required
+def follow(nickname):
+    user = User.query.filter_by(nickname=nickname).first()
+    if user is None:
+        flash('User %s not found.' % nickname)
+        return redirect(url_for('index'))
+    if user == g.user:
+        flash('You can\'t follow yourself!')
+        return redirect(url_for('user', nickname=nickname))
+    u = g.user.follow(user)
+    if u is None:
+        flash('Cannot follow ' + nickname + '.')
+        return redirect(url_for('user', nickname=nickname))
+    db.session.add(u)
+    db.session.commit()
+    flash('You are now following ' + nickname + '.')
+    return redirect(url_for('user', nickname=nickname))
+
+
+@app.route('/unfollow/<nickname>')
+@login_required
+def unfollow(nickname):
+    user = User.query.filter_by(nickname=nickname).first()
+    if user is None:
+        flash('User %s not found' % nickname)
+        return redirect(url_for('index'))
+    if user == g.user:
+        flash('You can\'t unfollow yourself!')
+        return redirect(url_for('user', nickname=nickname))
+    u = g.user.unfollow(user)
+    if u is None:
+        flash('Cannot unfollow ' + nickname + '.')
+        return redirect(url_for('user', nickname=nickname))
+    db.session.add(u)
+    db.session.commit()
+    flash('You have stopped following ' + nickname + '.')
+    return redirect(url_for('user', nickname=nickname))
+
 
 @app.route('/edit', methods=['GET', 'POST'])
 @login_required
@@ -103,10 +148,24 @@ def edit():
     return render_template('edit.html', form=form)
 
 
+@app.route('/post', methods=['POST'])
+@login_required
+def post():
+    form = PostForm()
+    if form.validate_on_submit():
+        new_post = Post(author=g.user, body=form.body.data,
+                        timestamp=datetime.datetime.utcnow())
+        db.session.add(new_post)
+        db.session.commit()
+        flash('Posted your wonderful post!')
+        return redirect(url_for('user', nickname=g.user.nickname))
+
+
 # Used by Flask-Login
 @lm.user_loader
 def load_user(id):
     return User.query.get(int(id))
+
 
 # If a user is currently logged in we want to pass the user
 #   object to the flask app global object

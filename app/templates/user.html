@@ -5,9 +5,25 @@
             <td><img src="{{ user.avatar(128) }}"></td>
             <td>
                 <h1>User: {{ user.nickname }}</h1>
-                {% if user.about_me %}<p>{{user.about_me}}</p>{%endif%}
-                {%if user.last_seen%}<p><i>Last seen on: {{user.last_seen}}</i></p>{%endif%}
-                {%if user.id == g.user.id %}<p><a href="{{ url_for('edit') }}">Edit</a></p>{%endif%}
+                {% if user.about_me %}<p>{{user.about_me}}</p>{% endif %}
+                {% if user.last_seen%}<p><i>Last seen on: {{user.last_seen}}</i></p>{% endif %}
+                <p>{{ user.followers.count() }} follower(s)</p><br>
+                {% if user.id == g.user.id %}
+                    <p><a href="{{ url_for('edit') }}">Edit</a></p>
+                    <form action="{{url_for('post')}}" method="post">
+                        {{ post_form.hidden_tag() }}
+                        Express yourself:<br>
+                        {% for error in post_form.errors.body %}
+                            <span style="color: red">[{{error}}]</span><br>
+                        {% endfor %}
+                        <textarea name="body"></textarea><br>
+                        <input type="submit" value="Post">
+                    </form>
+                {% elif not g.user.is_following(user) %}
+                    <a href="{{ url_for('follow', nickname=user.nickname) }}">Follow</a>
+                {% else %}
+                    <a href="{{ url_for('unfollow', nickname=user.nickname) }}">Unfollow</a>
+                {% endif %}
             </td>
         </tr>
     </table>

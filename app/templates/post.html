@@ -1,8 +1,13 @@
  <table>
       <tr valign="top">
-          <td><img src="{{ post.author.avatar(50) }}"></td><td><i>
-          <a href="{{ url_for('user', nickname=post.author.nickname) }}">
+          <td><img src="{{ post.author.avatar(50) }}"></td>
+          <td>
+              <i><a href="{{ url_for('user', nickname=post.author.nickname) }}">
               {{ post.author.nickname }}
-          </a> says:</i><br>{{ post.body }}</td>
+          </a> says:</i><br>
+              {{ post.body }}
+              <br>
+              <span style="font-size: 14px">At: {{ post.timestamp }}</span>
+        </td>
       </tr>
  </table>

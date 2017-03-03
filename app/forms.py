@@ -32,3 +32,8 @@ class EditForm(Form):
             return False
         # The new nickname was not found in DB
         return True
+
+
+class PostForm(Form):
+    body = StringField('body', validators=[DataRequired(),
+                                           Length(min=0, max=140)])
