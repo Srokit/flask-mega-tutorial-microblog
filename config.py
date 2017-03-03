@@ -9,7 +9,8 @@ SECRET_KEY = 'you-will-never-guess'
 OPENID_PROVIDERS = [
     {
         'url': "http://me.yahoo.com",
-        'name': "Yahoo"
+        'name': "Yahoo",
+        'imgurl': "http://logodatabases.com/wp-content/uploads/2012/01/yahoo-logo-purple.jpg"
     }
 ]
 

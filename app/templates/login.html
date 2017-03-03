@@ -23,9 +23,11 @@
             {% for error in form.openid.errors %}
                 <span style="color: red;">[{{ error }}]</span>
             {% endfor %}<br>
-            |{% for provider in providers %}
+            {% for provider in providers %}
                 <a href="javascript:set_openid('{{ provider.url }}',
-                        '{{ provider.name}}');">{{ provider.name }}</a>
+                        '{{ provider.name}}');">
+                    <img src="{{ provider.imgurl }}" width="50px" height="50px">
+                </a>
             {% endfor %}
         </p>
         <p>{{form.remember_me}} Remember Me</p>

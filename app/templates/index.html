@@ -4,12 +4,21 @@
     {% for post in posts.items %}
         {% include "post.html" %}
     {% endfor %}
-    {% if posts.has_prev %}<a href="{{ url_for('index', page=posts.prev_num) }}">
-        &lt;&lt; Newer posts
-    </a>
-    {% else %}&lt;&lt; Newer posts{% endif %} |
-    {% if posts.has_next %}<a href="{{ url_for('index', page=posts.next_num) }}">
-        Older posts &gt;&gt;
-    </a>
-    {% else %}Older posts &gt;&gt;{% endif %}
+    <div class="row">
+        <div class="col">
+                <ul class="pagination">
+                    <li class="page-item {% if not posts.has_prev %} disabled {% endif %}">
+                        <a class="page-link" href="{{ url_for('index', page=posts.prev_num) }}">
+                            Newer posts
+                        </a>
+                    </li>
+                    <li class="page-item {% if not posts.has_next %} disabled {% endif %}">
+                        <a class="page-link" href="{{ url_for('index', page=posts.next_num) }}">
+                            Older posts
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
 {% endblock %}
