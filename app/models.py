@@ -1,6 +1,13 @@
 from app import db
 import hashlib
 
+# Used by User model for follower-followed relationship
+followers = db.Table('followers',
+                     db.Column('follower_id', db.Integer,
+                               db.ForeignKey('user.id')),
+                     db.Column('followed_id', db.Integer,
+                               db.ForeignKey('user.id')))
+
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -9,6 +16,34 @@ class User(db.Model):
     posts = db.relationship('Post', backref='author', lazy='dynamic')
     about_me = db.Column(db.String(140))
     last_seen = db.Column(db.DateTime)
+    # For the self-referential relationship
+    followed = db.relationship('User',
+                               secondary=followers,
+                               primaryjoin=(followers.c.follower_id == id),
+                               secondaryjoin=(followers.c.followed_id == id),
+                               backref=db.backref('followers', lazy='dynamic'),
+                               lazy='dynamic')
+
+    def followed_posts(self):
+        joinq = Post.query.join(followers,
+                                (followers.c.followed_id == Post.user_id))
+        filterq = joinq.filter(followers.c.follower_id == self.id)
+        orderq = filterq.order_by(Post.timestamp.desc())
+        return orderq
+
+    def follow(self, user):
+        if not self.is_following(user):
+            self.followed.append(user)
+            return self
+
+    def unfollow(self, user):
+        if self.is_following(user):
+            self.followed.remove(user)
+            return self
+
+    def is_following(self, user):
+        query = self.followed.filter(followers.c.followed_id == user.id)
+        return query.count() > 0
 
     # If there is a conflict with a nickname given back from OpenID we need this
     @staticmethod
@@ -54,3 +89,4 @@ class Post(db.Model):
 
     def __repr__(self):
         return '<Post %r>' % self.body
+
