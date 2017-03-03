@@ -32,7 +32,6 @@ def login():
         return redirect(oid.get_next_url())
     form = LoginForm()
     if form.validate_on_submit():
-        print "Processing form"
         # Got login data from post request
         session['remember_me'] = form.remember_me.data
         return oid.try_login(form.openid.data, ask_for=['nickname', 'email'])
@@ -52,7 +51,6 @@ def logout():
 
 @oid.after_login
 def after_login(resp):
-    print "After login fired"
     if resp.email is None or resp.email == "":
         flash('Invalid login. Please try again.')
         return redirect(url_for('login'))
@@ -61,6 +59,7 @@ def after_login(resp):
         nickname = resp.nickname
         if nickname is None or nickname == "":
             nickname = resp.email.split('@')[0]
+        nickname = User.make_unique_nickname(nickname)
         user = User(nickname=nickname, email=resp.email)
         db.session.add(user)
         db.session.commit()
@@ -90,7 +89,7 @@ def user(nickname):
 @app.route('/edit', methods=['GET', 'POST'])
 @login_required
 def edit():
-    form = EditForm()
+    form = EditForm(g.user.nickname)
     if form.validate_on_submit():
         g.user.nickname = form.nickname.data
         g.user.about_me = form.about_me.data
